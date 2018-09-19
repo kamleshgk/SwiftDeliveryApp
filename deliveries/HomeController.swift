@@ -10,17 +10,24 @@ import UIKit
 
 class HomeController: UICollectionViewController, UICollectionViewDelegateFlowLayout {
     
+    //How many items to get from server
     var offSetCounter : Int = 0
+    //No more items to get from server
     var serverLimitReached : Bool = false
+    //Caches the list of delivery items
     var deliveryList:[Delivery] = []
+    //Service API
     var serviceAPI = BackEndService()
+    //Progress Bar indicator shown in right bar button
     var activityIndicator = UIActivityIndicatorView()
+    //Internet check service
     let recheabilityService = Reachability()
+    //Error Button shown in left bar
     var refreshBarButton: UIBarButtonItem?
+    //Error message shown during errors
     var errorLabel = UILabel()
     
     init(collectionViewLayout: UICollectionViewFlowLayout) {
-        //Setup collectionView layout here and pass with init
         super.init(collectionViewLayout: collectionViewLayout)
         
         self.collectionView = collectionView
@@ -65,6 +72,8 @@ class HomeController: UICollectionViewController, UICollectionViewDelegateFlowLa
         view.addConstraint(NSLayoutConstraint(item: errorLabel, attribute: .height, relatedBy: .equal, toItem: nil, attribute: .notAnAttribute,multiplier: 1, constant: 50))
         
         self.automaticallyAdjustsScrollViewInsets = false
+        
+        //Lets get deliveries on load, shall we!
         self.getDeliveryData()
     }
     
@@ -77,10 +86,14 @@ class HomeController: UICollectionViewController, UICollectionViewDelegateFlowLa
     
     
     //MARK:- Private Methods
+    
+    //Method that invokes methods in BackEndService class to get delivery data
     @objc func getDeliveryData()
     {
         if (serverLimitReached == false)
         {
+            //Get data only of server has items
+            
             if recheabilityService.isConnectedToNetwork() == true {
                 errorLabel.isHidden = true
                 self.navigationItem.leftBarButtonItem = nil
@@ -103,6 +116,8 @@ class HomeController: UICollectionViewController, UICollectionViewDelegateFlowLa
                         }
                         else
                         {
+                            //Server will return 0 items then there are no more records to fetch.
+                            
                             self.activityIndicator.stopAnimating()
                             self.activityIndicator.tag = 0
                             self.serverLimitReached = true
@@ -113,7 +128,6 @@ class HomeController: UICollectionViewController, UICollectionViewDelegateFlowLa
                     {
                         self.activityIndicator.stopAnimating()
                         self.activityIndicator.tag = 0
-                        print("ERROR WOW - \(error)")
                         self.showErrorMessage(error: "Other Error. Please try again.")
                     }
                 }
@@ -126,6 +140,7 @@ class HomeController: UICollectionViewController, UICollectionViewDelegateFlowLa
         }
     }
     
+    //Method to show errors during issues
     func showErrorMessage(error:String)
     {
         errorLabel.text = error
@@ -163,6 +178,8 @@ class HomeController: UICollectionViewController, UICollectionViewDelegateFlowLa
     
     override func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         
+        //Lets how the detail view
+        
         let item = self.deliveryList[indexPath.row] as Delivery
         
         let viewController = DeliveryDetailsViewController()
@@ -176,6 +193,7 @@ class HomeController: UICollectionViewController, UICollectionViewDelegateFlowLa
             if (self.activityIndicator.tag == 0)
             {
                 if recheabilityService.isConnectedToNetwork() == true {
+                    //Enables Infinite Scrolling
                     offSetCounter += 20
                     self.getDeliveryData()
                 }
